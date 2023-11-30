@@ -1,0 +1,67 @@
+const int numPins = 14;  // Number of digital pins
+int pinArray[numPins];   // Array to store pin states
+
+void setup() {
+  Serial.begin(9600);  // Initialize Serial communication
+
+  // Set up pins as INPUT
+  for (int i = 22; i < 22 + numPins; i++) {
+    pinMode(i, INPUT);
+  }
+  Serial.println("Welcome to Arduino Data Logger, type 'D' to log or send a 7-byte long string to control inputs");
+}
+
+void loggingMode() {
+  // Read and store the state of each pin
+  for (int i = 0; i < numPins; i++) {
+    pinArray[i] = digitalRead(22 + i);
+  }
+
+  // Print the pin states to the Serial Monitor
+  Serial.print("Logging Mode - Pin States: ");
+  for (int i = 0; i < numPins; i++) {
+    Serial.print(pinArray[i]);
+    Serial.print(" ");
+  }
+  Serial.println();  // Move to the next line for better readability
+}
+
+void controlMode() {
+  // Control mode logic goes here
+  // Read incoming serial data and update pin states accordingly
+
+  Serial.println("Control Mode - Enter a 7-byte long string to set HIGH or LOW state for each of the 7 SWITCH pins.");
+
+  char inputBuffer[6];  // Buffer to store the incoming 7-byte string
+
+  if (Serial.available() >= 7) {
+
+    Serial.readBytes(inputBuffer, 7);  // Read the 7-byte string
+
+    for (int i = 0; i < 7; i++) {
+      if (inputBuffer[i] == '1') {
+        digitalWrite(22 + i, HIGH);
+      } else if (inputBuffer[i] == '0') {
+        digitalWrite(22 + i, LOW);
+      }
+    }
+
+    Serial.println("Pin states updated based on the received string.");
+  } else {
+    Serial.println("Error: Insufficient data received for control mode.");
+  }
+
+  Serial.println("Exiting Control Mode. Returning to Logging Mode.");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    
+    if (command == 'D') {
+      loggingMode();
+    } else {
+      controlMode();
+    }
+  }
+}
