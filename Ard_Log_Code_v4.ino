@@ -106,7 +106,7 @@ void ControlMode(const char data[]) {
 
   RequestStateLog();                       // Sends log to Serial
 
-  //delay(500);                             // So we can physically see what is happening 
+  delay(500);                             // So we can physically see what is happening 
 
 
   // This is where we would need to route back to the loop
