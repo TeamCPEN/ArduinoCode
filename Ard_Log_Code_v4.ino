@@ -3,8 +3,8 @@ int currentPinStateArray[numPins];        // array for state values of pins
 char serialDataBuffer[8];                 //used as a buffer array
 
 const int switchPinArray[numPins/2] = {2,3,4,5,6,7,8};         //New Pin Numbers
-const int outputPinArray[numPins/2] = {9,10,11,12,13,14,15};  //New Pin Numbers
-const int SwitchPowerPin = 16;                                //new pin number
+const int outputPinArray[numPins/2] = {13,14,15,16,17,18,19};  //New Pin Numbers
+const int SwitchPowerPin = 10;                                //new pin number
 
 unsigned long startTime = 0.0;  //used for the timing logs and such
 unsigned long endTime = 0.0;
