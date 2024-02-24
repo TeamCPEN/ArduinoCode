@@ -1,7 +1,13 @@
+
+// version number 5 goes with ILC software v7.2
+
 const int numPins = 14;                   // Number of digital pins inputs x 2 
 int currentPinStateArray[numPins];        // array for state values of pins
 int lastPinStateArray[numPins/2];
 char serialDataBuffer[8];                 //used as a buffer array
+
+const unsigned long commandTimeout = 5000; // Timeout period in milliseconds
+unsigned long lastCommandTime = 0;
 
 const int switchPinArray[numPins/2] = {2,3,4,5,6,7,8};         //New Pin Numbers
 const int outputPinArray[numPins/2] = {13,14,15,16,17,18,19};  //New Pin Numbers
@@ -11,8 +17,7 @@ const int ClkPin = 9;
 unsigned long startTime = 0.0;  //used for the timing logs and such
 unsigned long endTime = 0.0;
 
-unsigned long lastUpdateTime = 0;  // Last update time
-const long updateInterval = 1000;  // Update interval in milliseconds (1 second)
+
 
 
 
@@ -84,7 +89,7 @@ void RequestStateLog() {
     Serial.print(currentPinStateArray[i+7]);
     //Serial.print(" ");
   }
-  endTime = micros();
+  //endTime = micros();
   Serial.println();
   //Serial.print("Finished With Operation took: ");
   //Serial.print( abs(endTime - startTime));
@@ -120,27 +125,39 @@ void SetSwitchPinsToOutput() {             // Set switch pins to OUTPUT
 
 
 void ControlMode(const char data[]) {
+  unsigned long entryTime = millis(); // Record the time when ControlMode was entered
 
-  SetSwitchPinsToOutput();
+  do {
+    SetSwitchPinsToOutput();
 
-  for (int i = 0; i < 7; ++i) {            // Sets Switches to 1 or 0
-    if (data[i] == '1') {
-      digitalWrite(switchPinArray[i],HIGH);
-    } else if (data[i] == '0') {
-      digitalWrite(switchPinArray[i],LOW);
+    for (int i = 0; i < 7; ++i) {            // Sets Switches to 1 or 0
+      if (data[i] == '1') {
+        digitalWrite(switchPinArray[i],HIGH);
+      } else if (data[i] == '0') {
+        digitalWrite(switchPinArray[i],LOW);
+      }
     }
-  }
 
-  RequestStateLog();                       // Sends log to Serial
+    RequestStateLog(); // Log the current state
 
-  delay(500);                             // So we can physically see what is happening 
+    // Minimal delay or perform other necessary operations here
+    // Consider reducing or removing this delay to improve responsiveness
+    delay(500);
 
+    if (Serial.available() > 0) {
+      // If new data is available, read it and reset the entryTime
+      ReadSerialData(); // Make sure this function properly populates `serialDataBuffer`
+      entryTime = millis(); // Reset entry time since we have a new command
+    } else {
+      // If no new data, check if the timeout has elapsed
+      if (millis() - entryTime >= commandTimeout) {
+        break; // Exit the loop if the timeout has elapsed
+      }
+    }
+  } while (true);
 
-  // This is where we would need to route back to the loop
-  // if there were more TT rows following works without but will increase performance
-  
-  SetSwitchPinsToInput();
-  } 
+  SetSwitchPinsToInput(); // Make sure to set back to input mode when exiting control mode
+}
 
 
 void ReadSerialData() {
@@ -152,14 +169,15 @@ void ReadSerialData() {
 void ProcessSerialData() {
 
   if ((serialDataBuffer[0] == '1' || serialDataBuffer[0] == '0') && (serialDataBuffer[1] != '1' && serialDataBuffer[1] != '0'))  {
-      startTime = micros();
+      //startTime = micros();
       RequestStateLog();
     }
 
     //If data is present at 7th value IE last value then controll mode initiallizes with the said value IE inputted data
     if (serialDataBuffer[6] == '1' || serialDataBuffer[6] == '0') {
-      startTime = micros();
+      //startTime = micros();
       ControlMode(serialDataBuffer);
+      ResetSerialDataBuffer();
     }
 }
 
