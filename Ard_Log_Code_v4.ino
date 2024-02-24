@@ -5,6 +5,7 @@ char serialDataBuffer[8];                 //used as a buffer array
 const int switchPinArray[numPins/2] = {2,3,4,5,6,7,8};         //New Pin Numbers
 const int outputPinArray[numPins/2] = {13,14,15,16,17,18,19};  //New Pin Numbers
 const int SwitchPowerPin = 10;                                //new pin number
+const int ClkPin = 9;
 
 unsigned long startTime = 0.0;  //used for the timing logs and such
 unsigned long endTime = 0.0;
@@ -16,11 +17,29 @@ void setup() {
 
   ResetSerialDataBuffer();   // Set Buffer To Null Initially
   SetAllPinsToInput();       // default to all pins as input
+
+  pinMode(ClkPin, OUTPUT);
+  setClk(2);
  
   //Serial.println("Welcome to Arduino Data Logger, 1 byte for logg, 7 bytes to control inputs");
   //Serial.println();
+
+  resetStateArray();
 }
 
+void setClk(float freq) {  
+  TCCR1A = 0x41;                   // Change to use COM1A1:0 bits for OCR1A (pin 9)  
+  TCCR1B = 0x14;                   // Same as before, as we are still using Timer 1  
+  OCR1A = 0x7A12 / (freq * 2);           // Set frequency for pin 9  
+  OCR1B = OCR1A * 0.5;  // This line now affects pin 10 instead of pin 9
+  }
+
+void resetStateArray() {
+  for (int i = 0; i < numPins/2; i++) {
+    currentPinStateArray[i]=0;
+    currentPinStateArray[i+7]=0;
+  }
+}
 
 void SetAllPinsToInput() {
   for (int i = 0; i < numPins/2; i++) {     // Set All Inputs & Outputs pins to INPUT or READ mode
@@ -40,6 +59,7 @@ void ResetSerialDataBuffer() {
 
 
 void RequestStateLog() {
+
 
   //Read and store each state of pin into statArray(is Printed later)
   for (int i = 0; i < numPins/2; i++) {
@@ -68,6 +88,7 @@ void RequestStateLog() {
   // Reset Buffer To Null, logging is called at the end of any operation
 
   ResetSerialDataBuffer(); 
+  resetStateArray();
 }
 
 
