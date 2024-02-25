@@ -123,6 +123,16 @@ void SetSwitchPinsToOutput() {             // Set switch pins to OUTPUT
   }
 }
 
+bool isValidData(const char* data) {
+    // Example validation: check data length and content
+    for (int i = 0; i < 7; i++) {
+        if (data[i] != '0' && data[i] != '1') {
+            return false; // Invalid data
+        }
+    }
+    return true; // Valid data
+}
+
 
 void ControlMode(const char data[]) {
   unsigned long entryTime = millis(); // Record the time when ControlMode was entered
@@ -142,12 +152,17 @@ void ControlMode(const char data[]) {
 
     // Minimal delay or perform other necessary operations here
     // Consider reducing or removing this delay to improve responsiveness
-    delay(500);
+    delay(600);
 
     if (Serial.available() > 0) {
       // If new data is available, read it and reset the entryTime
       ReadSerialData(); // Make sure this function properly populates `serialDataBuffer`
-      entryTime = millis(); // Reset entry time since we have a new command
+      if (isValidData(serialDataBuffer)) {
+        entryTime = millis(); // Reset entry time since we have a new command
+        
+      }
+
+      
     } else {
       // If no new data, check if the timeout has elapsed
       if (millis() - entryTime >= commandTimeout) {
@@ -161,9 +176,13 @@ void ControlMode(const char data[]) {
 
 
 void ReadSerialData() {
-
-  // Read incoming serial data and store it to serialDataBuffer
-  char incomingChar = Serial.readBytes(serialDataBuffer, sizeof(serialDataBuffer));
+    // Clear the buffer first
+    memset(serialDataBuffer, '\0', sizeof(serialDataBuffer));
+    
+    // Then read new data into the buffer
+    if (Serial.available() > 0) {
+        Serial.readBytes(serialDataBuffer, sizeof(serialDataBuffer) - 1);
+    }
 }
 
 void ProcessSerialData() {
