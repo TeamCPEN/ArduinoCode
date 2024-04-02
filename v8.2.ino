@@ -184,16 +184,16 @@ void ProcessSerialData() {
     ResetSerialDataBuffer();
   }
 
-  if (serialDataBuffer[0] == 'y' && serialDataBuffer[6] == '\0')
+  if (serialDataBuffer[0] == '#' && serialDataBuffer[6] == '\0')
     offClk();
 
-  if (serialDataBuffer[0] == 'y' && serialDataBuffer[1] == 'y')
+  if (serialDataBuffer[0] == '#' && serialDataBuffer[1] == '#')
     setClk(2);
 
   if (serialDataBuffer[0] == '?')
     Serial.println("1V8");
 
-  if (serialDataBuffer[0] == 'x' && serialDataBuffer[1] == '0') {
+  if (serialDataBuffer[0] == 'x'&& serialDataBuffer[1] == '\0') {
     cycleAndState0();
   }
   if (serialDataBuffer[0] == 'x' && serialDataBuffer[1] == '1') {
